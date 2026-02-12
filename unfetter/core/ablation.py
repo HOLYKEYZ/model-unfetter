@@ -39,7 +39,11 @@ def compute_projection(
         raise ValueError(f"Direction must be 1D, got shape {direction.shape}")
 
     # Ensure direction is normalized
-    direction = direction / direction.norm()
+    norm = direction.norm()
+    if norm < 1e-10:
+        return torch.zeros_like(weight)
+        
+    direction = direction / norm
 
     # Move direction to same device/dtype as weight
     direction = direction.to(device=weight.device, dtype=weight.dtype)
