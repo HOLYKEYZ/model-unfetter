@@ -85,11 +85,13 @@ def cli(ctx, verbose):
               help="Max prompt samples for vector computation")
 @click.option("--target-layer", type=int, default=-2,
               help="Layer for refusal vector computation")
+@click.option("--verify", is_flag=True, default=False,
+              help="Verify detected architecture and exit")
 @click.pass_context
 def ablate(ctx, model_path, backend, output, strength, layers, targets,
            ram, vram, checkpoint_every, checkpoint_dir, validate,
            cache_vectors, output_format, dataset_source, max_samples,
-           target_layer):
+           target_layer, verify):
     """
     Apply directional ablation to remove refusal behavior from a model.
 
@@ -127,6 +129,7 @@ def ablate(ctx, model_path, backend, output, strength, layers, targets,
             "max_samples": max_samples,
             "target_layer": target_layer,
             "verbose": ctx.obj.get("verbose", False),
+            "verify": verify,
         }
 
         run_ablation(config)

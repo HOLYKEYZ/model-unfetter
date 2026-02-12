@@ -68,6 +68,21 @@ def run_ablation(config: Dict) -> None:
     logger.info(f"Architecture: {summary['family']}, {summary['num_layers']} layers, "
                 f"hidden_size={summary['hidden_size']}")
 
+    # Verification mode: Print details and exit
+    if config.get("verify"):
+        print("\n" + "="*40)
+        print("🔍 MODEL VERIFICATION")
+        print("="*40)
+        print(f"Family:         {summary['family']}")
+        print(f"Model Name:     {summary['model_name']}")
+        print(f"Layers:         {summary['num_layers']}")
+        print(f"Hidden Dim:     {summary['hidden_size']}")
+        print(f"Target Modules: {summary['target_modules']}")
+        print(f"Layer Path:     {summary['layer_path']}")
+        print("="*40 + "\n")
+        logger.info("Verification complete. Exiting.")
+        return
+
     # Step 4: Load prompts and compute refusal vector
     logger.info("Step 4/7: Computing refusal vector...")
     from unfetter.datasets.loader import load_prompts
