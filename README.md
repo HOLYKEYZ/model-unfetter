@@ -36,6 +36,28 @@ graph TD
     L -->|Refusal Rate < 5%| M[Save Model]
 ```
 
+<!-- ASCII Diagram for viewers without Mermaid support -->
+```text
+[User Inputs] --> [CLI] --> [Backend Selection]
+                                   │
+          ┌────────────────────────┼────────────────────────┐
+          ▼                        ▼                        ▼
+     [CPU Backend]           [GPU Backend]        [Distributed Backend]
+   (4-bit/Seq Layer)       (Auto-Quant/Batch)      (Multi-GPU/Model Parallel)
+          │                        │                        │
+          └────────────────────────┼────────────────────────┘
+                                   ▼
+                             [Load Model]
+                                   ▼
+                      [Compute Refusal Vector v̂]
+                       (Difference of Means)
+                                   ▼
+                      [Directional Ablation]
+                      W' = W - α(W·v̂)v̂ᵀ
+                                   ▼
+                       [Validation & Saving]
+```
+
 ### Core Formula
 
 ```
@@ -148,19 +170,18 @@ unfetter/
 | GPU (24GB+) | 24GB VRAM | fp16 | ~30 sec/7B |
 | Multi-GPU | 2×16GB+ | fp16 | ~15 sec/7B |
 
-## Comparison with Heretic
+## Troubleshooting
 
-| Feature | Model Unfetter | Heretic |
-|---------|---------------|---------|
-| License | MIT | AGPL-3.0 |
-| Backend Support | CPU/GPU/Multi-GPU | GPU only |
-| Model Families | 15+ auto-detected | Manual config |
-| Resume Support | ✅ Checkpointing | ❌ |
-| Built-in Prompts | 100+ per category | External data |
-| MoE Support | ✅ (Mixtral) | Limited |
-| Layer Selection | Auto/Manual/% | Manual |
-| Validation Suite | Built-in | External |
+### Common Issues
+
+- **CUDA Out of Memory**: Try reducing `--batch-size` (if exposed) or use `--quantization 4bit`.
+- **Refusal Vector Not Cached**: Ensure you have write permissions to `~/.unfetter`.
+- **Model Not Found**: Check if the model ID is correct on HuggingFace or if the local path exists.
+
+### Support
+
+For bugs and feature requests, please open an issue on the GitHub repository.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
