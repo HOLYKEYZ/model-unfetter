@@ -152,7 +152,8 @@ def get_model_handler(
     if family is None:
         family = detect_model_family(model_name, model)
 
-    handler_class = MODEL_REGISTRY.get(family, TransformerModel)
+    from unfetter.models.generic import GenericModel
+    handler_class = MODEL_REGISTRY.get(family, GenericModel)
     handler = handler_class(model, model_name)
 
     logger.info(

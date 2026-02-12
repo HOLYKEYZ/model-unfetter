@@ -61,6 +61,8 @@ def run_ablation(config: Dict) -> None:
     # Step 3: Detect model family
     logger.info("Step 3/7: Detecting model architecture...")
     from unfetter.models.registry import get_model_handler
+    # Ensure GenericModel is available for fallback
+    import unfetter.models.generic 
     handler = get_model_handler(model, model_path)
     summary = handler.get_summary()
     logger.info(f"Architecture: {summary['family']}, {summary['num_layers']} layers, "
