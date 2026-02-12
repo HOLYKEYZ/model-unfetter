@@ -16,27 +16,9 @@ Model Unfetter removes refusal behaviors from language models using **directiona
 
 
 
-<!-- ASCII Diagram for viewers without Mermaid support -->
-```text
-[User Inputs] --> [CLI] --> [Backend Selection]
-                                   │
-          ┌────────────────────────┼────────────────────────┐
-          ▼                        ▼                        ▼
-     [CPU Backend]           [GPU Backend]        [Distributed Backend]
-   (4-bit/Seq Layer)       (Auto-Quant/Batch)      (Multi-GPU/Model Parallel)
-          │                        │                        │
-          └────────────────────────┼────────────────────────┘
-                                   ▼
-                             [Load Model]
-                                   ▼
-                      [Compute Refusal Vector v̂]
-                       (Difference of Means)
-                                   ▼
-                      [Directional Ablation]
-                      W' = W - α(W·v̂)v̂ᵀ
-                                   ▼
-                       [Validation & Saving]
-```
+![Architecture](assets/architecture.png)
+![Vector Projection](assets/vector_projection.png)
+
 
 ### Core Formula
 
