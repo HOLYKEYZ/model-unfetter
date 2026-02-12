@@ -1,0 +1,22 @@
+# Core dependencies
+torch>=2.0.0
+transformers>=4.36.0
+safetensors>=0.4.0
+click>=8.0.0
+psutil>=5.9.0
+
+# GPU support (optional)
+# bitsandbytes>=0.41.0
+# accelerate>=0.24.0
+
+# HuggingFace datasets (optional)
+# datasets>=2.16.0
+
+# Advanced features (optional)
+# optuna>=3.4.0
+# rich>=13.0.0
+
+# Development (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# ruff>=0.1.0
