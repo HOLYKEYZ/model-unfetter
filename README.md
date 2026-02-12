@@ -32,7 +32,8 @@ Where `W` is a weight matrix, `v̂` is the normalized refusal direction, and `α
 
 - **Multi-Backend Architecture**: CPU (4-bit, 16GB RAM), GPU (8/16/24GB VRAM), and multi-GPU distributed processing
 - **Smart Layer Selection**: Auto-targets the last 30% of layers where refusal is concentrated, or manual override with slices/ranges/percentages
-- **15+ Model Families**: Llama, Mistral, Mixtral (MoE), Gemma, Qwen, Phi, Yi, InternLM, DeepSeek, and more
+- **Universal Compatibility**: Auto-detects architecture for *any* HuggingFace model via smart heuristics (or verifies with `--verify`)
+- **Optimized Handlers**: 15+ dedicated family handlers (Llama, Mistral, Mixtral, Gemma, Qwen, Phi, etc.)
 - **Refusal Vector Computation**: Difference-of-means with caching, batched extraction, and custom prompt support
 - **Quality Validation**: Built-in refusal rate, helpfulness, KL divergence, and knowledge retention benchmarks
 - **Resume Support**: Checkpoint system for long-running jobs on limited hardware
@@ -56,6 +57,10 @@ pip install -e ".[full]"
 ```bash
 # Auto-detect hardware and ablate
 unfetter ablate meta-llama/Llama-3.1-8B-Instruct
+
+# Universal Support (Any HuggingFace Model)
+unfetter ablate my-custom-model --verify  # Check detected architecture
+unfetter ablate my-custom-model           # Run with auto-fallback
 
 # Custom strength and layers
 unfetter ablate ./my-model --strength 0.8 --layers -8:-1
