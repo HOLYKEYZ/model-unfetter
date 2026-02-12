@@ -144,7 +144,7 @@ unfetter/
 
 For bugs and feature requests, please open an issue on the GitHub repository.
 
-## Why Model Unfetter?
+##Model Unfetter compared to closest tools
 
 While inspired by research scripts like *Heretic*, **Model Unfetter** is built as a production-grade engine designed for accessibility and safety.
 
@@ -155,7 +155,7 @@ While inspired by research scripts like *Heretic*, **Model Unfetter** is built a
 | **Architecture** | **Modular Package** | Single Script | Installable via `pip`. Importable into other tools. |
 | **Safety** | **Validation Suite** | None | Automatically tests if the model is broken before saving. |
 | **Resumability**| **Checkpointing** | No | Resume from the last layer if your process crashes. |
-| **License** | **Apache 2.0** | AGPL 3.0 | Safe for enterprise and commercial use. |
+
 
 
 
