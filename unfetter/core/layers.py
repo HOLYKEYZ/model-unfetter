@@ -129,6 +129,14 @@ def select_layers(
         end = int(num_layers * end_pct / 100)
         return list(range(start, min(end, num_layers)))
 
+    # Single percentage: "30%" (interpreted as "last 30%")
+    match = re.match(r"^(\d+)%$", spec)
+    if match:
+        pct = int(match.group(1))
+        n_select = max(1, int(num_layers * pct / 100))
+        start = num_layers - n_select
+        return list(range(start, num_layers))
+
     # Slice notation: "-8:-1" or "10:20"
     if ":" in spec and "," not in spec and "%" not in spec:
         parts = spec.split(":")
