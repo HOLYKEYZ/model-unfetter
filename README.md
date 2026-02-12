@@ -144,6 +144,21 @@ unfetter/
 
 For bugs and feature requests, please open an issue on the GitHub repository.
 
+## Why Model Unfetter?
+
+While inspired by research scripts like *Heretic*, **Model Unfetter** is built as a production-grade engine designed for accessibility and safety.
+
+| Feature | **Model Unfetter** | **Heretic / Scripts** | **Impact** |
+| :--- | :--- | :--- | :--- |
+| **Backend** | **CPU + GPU + Distributed** | GPU Only | Run ablation on a MacBook or consumer PC. No H100s required. |
+| **Precision** | **4-bit NF4** (Built-in) | FP16 / 8-bit | Requires **50% less VRAM** to load the same model. |
+| **Architecture** | **Modular Package** | Single Script | Installable via `pip`. Importable into other tools. |
+| **Safety** | **Validation Suite** | None | Automatically tests if the model is broken before saving. |
+| **Resumability**| **Checkpointing** | No | Resume from the last layer if your process crashes. |
+| **License** | **Apache 2.0** | AGPL 3.0 | Safe for enterprise and commercial use. |
+
+
+
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE) for details.
