@@ -50,6 +50,8 @@ pip install -e ".[gpu]"
 
 # For full features
 pip install -e ".[full]"
+# For development environment (testing, linting)
+pip install -e ".[dev]"
 ```
 
 ### Basic Usage
