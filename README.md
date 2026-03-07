@@ -52,6 +52,14 @@ pip install -e ".[gpu]"
 pip install -e ".[full]"
 # For development environment (testing, linting)
 pip install -e ".[dev]"
+### Development Setup
+To set up your development environment, follow these steps after installing the development dependencies:
+```bash
+# Run tests
+test
+# Execute linter
+ruff check .
+```
 ```
 
 ### Basic Usage
