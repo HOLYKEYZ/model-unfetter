@@ -71,7 +71,9 @@ class ProgressBar:
 
     def update(self, n: int = 1):
         """Update progress by n steps."""
-        self.current += n
+        if self.total == 0:
+            return
+        self.current = min(self.current + n, self.total)
         self._render()
 
     def _render(self):
