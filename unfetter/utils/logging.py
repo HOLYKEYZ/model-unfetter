@@ -76,30 +76,30 @@ class ProgressBar:
         self.current = min(self.current + n, self.total)
         self._render()
 
-    def _render(self):
-        """Render progress bar to terminal."""
-        if self.total == 0:
-            return
-
-        pct = self.current / self.total
-        filled = int(self.width * pct)
-        bar = "█" * filled + "░" * (self.width - filled)
-
-        elapsed = time.time() - self.start_time
-        rate = self.current / max(elapsed, 0.01)
-        remaining = (self.total - self.current) / max(rate, 0.001)
-
-        line = (
-            f"\r  {self.desc} [{bar}] "
-            f"{pct * 100:.1f}% "
-            f"({self.current}/{self.total}) "
-            f"[{elapsed:.0f}s elapsed, ~{remaining:.0f}s remaining]"
-        )
-        print(line, end="", flush=True)
-
-        if self.current >= self.total:
-            print()  # newline on completion
-
+        def _render(self):
+            """Render progress bar to terminal."""
+            if self.total == 0:
+                return
+            
+            pct = self.current / self.total
+            filled = int(self.width * pct)
+            bar = "█" * filled + "░" * (self.width - filled)
+            
+            elapsed = time.time() - self.start_time
+            rate = self.current / max(elapsed, 0.01)
+            remaining = (self.total - self.current) / max(rate, 0.001)
+            
+            line = (
+                f"\r  {self.desc} [{bar}] "
+                f"{pct * 100:.1f}% "
+                f"({self.current}/{self.total}) "
+                f"[{elapsed:.0f}s elapsed, ~{remaining:.0f}s remaining]"
+            )
+            print(line, end="", flush=True, file=sys.stderr)
+            
+            if self.current >= self.total:
+                print(file=sys.stderr)  # newline on completion
+      
     def close(self):
         """Finalize the progress bar."""
         if self.current < self.total:
