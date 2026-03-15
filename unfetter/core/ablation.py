@@ -137,15 +137,34 @@ def ablate_layer(
             continue
 
         # Get weight data (handle quantized weights)
-        weight = target.weight.data
+        from unfetter.core.quantization import dequantize_weight
+        weight = dequantize_weight(target.weight)
+        
+        # Ensure weight is correctly shaped (dequantization can sometimes flatten)
+        if hasattr(target, "weight") and weight.shape != target.weight.shape:
+             weight = weight.reshape(target.weight.shape)
+
+        # Check if this module is compatible with the refusal vector
+        # Formula W' = W - (W.v)v^T requires v to be in the input space of W
+        if weight.shape[-1] != refusal_vector.shape[0]:
+            logger.debug(
+                f"Skipping {module_name}: shape {weight.shape} incompatible "
+                f"with vector {refusal_vector.shape}"
+            )
+            continue
 
         # Compute ablated weight
         original_norm = weight.norm().item()
         ablated_weight = ablate_weight(weight, refusal_vector, strength)
         projection_norm = (weight - ablated_weight).norm().item()
 
-        # Apply in-place
-        target.weight.data = ablated_weight
+        # Apply update
+        if hasattr(target.weight, "quant_state"):
+            # If it was quantized, we replace it with a float parameter
+            # logic to maintain the architecture but with float weights
+            target.weight = nn.Parameter(ablated_weight.to(dtype=weight.dtype))
+        else:
+            target.weight.data = ablated_weight.to(dtype=target.weight.dtype)
 
         stats["modified_modules"].append(module_name)
         stats["projection_norms"][module_name] = {

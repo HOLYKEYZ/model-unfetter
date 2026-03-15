@@ -12,6 +12,11 @@
 
 Model Unfetter removes refusal behaviors from language models using **directional ablation** — a technique that identifies and removes the linear directions in weight space responsible for refusal, while preserving the model's general capabilities.
 
+### Requirements & Compatibility
+- **Python**: Recommended version **3.10** or **3.11** (highest stability with `bitsandbytes` on Windows).
+- **RAM**: Minimum **16GB** for CPU-based ablation of 7B models (4-bit).
+- **Backend**: Use `--backend cpu` for systems without CUDA GPUs.
+
 ### How It Works
 
 

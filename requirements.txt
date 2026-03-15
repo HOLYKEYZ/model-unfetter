@@ -5,9 +5,10 @@ safetensors>=0.4.0
 click>=8.0.0
 psutil>=5.9.0
 
-# GPU support (optional)
-# bitsandbytes>=0.41.0
-# accelerate>=0.24.0
+# GPU/CPU Quantization support
+bitsandbytes>=0.41.0
+accelerate>=0.24.0
+
 
 # HuggingFace datasets (optional)
 # datasets>=2.16.0

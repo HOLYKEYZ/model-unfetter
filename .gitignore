@@ -29,6 +29,8 @@ Thumbs.db
 *.gguf
 *.pt
 !unfetter/datasets/*.json
+unfettered-*/
+
 
 # Checkpoints
 checkpoints/
