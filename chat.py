@@ -11,22 +11,18 @@ def chat():
     print(f"Loading ablated model from {model_path}...")
     
     try:
-        from transformers import BitsAndBytesConfig
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         
-        # Proper config for 4-bit loading
-        quant_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_use_double_quant=True
-        )
-
+        # Qwen 0.5B is small (1GB in fp16). 
+        # Loading in float16/float32 on CPU is MUCH faster than 4-bit 
+        # because 4-bit requires slow CPU dequantization on every step.
+        print("Loading in float16 (Fast Mode)...")
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            device_map="auto",
-            quantization_config=quant_config
+            device_map="cpu",
+            torch_dtype=torch.float16
         )
+
 
     except Exception as e:
         print(f"Error loading model: {e}")
@@ -47,7 +43,7 @@ def chat():
         with torch.no_grad():
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=50,
+                max_new_tokens=200,
                 do_sample=True,
                 temperature=0.7,
                 pad_token_id=tokenizer.eos_token_id
