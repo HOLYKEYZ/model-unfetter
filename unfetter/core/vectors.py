@@ -67,9 +67,24 @@ def get_layer_activation(
     handle = target_layer.register_forward_hook(hook_fn)
 
     try:
+        # Apply chat template if available to match inference conditions
+        if isinstance(prompt, str) and hasattr(tokenizer, "chat_template") and tokenizer.chat_template:
+            # We wrap in try block in case it requires a specific structure
+            try:
+                prompt_to_tokenize = tokenizer.apply_chat_template(
+                    [{"role": "user", "content": prompt}],
+                    tokenize=False,
+                    add_generation_prompt=True,
+                )
+            except Exception as e:
+                logger.debug(f"Failed to apply chat template: {e}, using raw prompt")
+                prompt_to_tokenize = prompt
+        else:
+            prompt_to_tokenize = prompt
+
         # Tokenize and run forward pass
         inputs = tokenizer(
-            prompt,
+            prompt_to_tokenize,
             return_tensors="pt",
             truncation=True,
             max_length=512,
@@ -86,8 +101,9 @@ def get_layer_activation(
         if "value" not in activation:
             raise RuntimeError(f"Hook did not capture activation at layer {resolved_idx}")
 
-        # Take the first token's activation (residual at position 0)
-        act = activation["value"][0, 0, :].clone()
+        # Take the LAST token's activation (residual at position -1)
+        # This is where the model has processed the full prompt and decides whether to refuse
+        act = activation["value"][0, -1, :].clone()
 
         return act.cpu()
 
@@ -260,10 +276,11 @@ def _extract_activations_batched(
             continue
 
         # Periodic cleanup
-        if (i + 1) % batch_size == 0:
+        if (i + 1) % batch_size == 0 or (i + 1) == len(prompts):
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+            print(f"  {label}: processed {i + 1}/{len(prompts)}", flush=True)
             logger.debug(f"  {label}: processed {i + 1}/{len(prompts)}")
 
     if not activations:

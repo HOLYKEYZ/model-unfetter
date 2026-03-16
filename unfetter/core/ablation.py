@@ -76,8 +76,8 @@ def ablate_weight(
     Returns:
         Modified weight tensor (new tensor, original is not modified).
     """
-    if not 0.0 <= strength <= 1.0:
-        raise ValueError(f"Strength must be in [0.0, 1.0], got {strength}")
+    if not 0.0 <= strength <= 2.0:
+        raise ValueError(f"Strength must be in range [0.0, 2.0], got {strength}")
 
     if strength == 0.0:
         return weight.clone()
