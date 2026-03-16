@@ -1,181 +1,88 @@
 # 🔓 Model Unfetter
 
-**Multi-tier model unalignment framework using weight orthogonalization**
+**High-Precision LLM Unalignment via Aggressive Repulsion Orthogonalization**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 
-> ⚠️ **Disclaimer:** This tool is designed exclusively for AI safety research and red teaming. Use responsibly and in compliance with all applicable laws and model licenses.
+> ⚠️ **Disclaimer:** This tool is designed exclusively for AI safety research and red teaming. Use responsibly and in accordance with model licenses.
 
-## Overview
+## 🚀 Overview
 
-Model Unfetter removes refusal behaviors from language models using **weight orthogonalization** — a technique inspired by [Heretic](https://github.com/Heretic-Research/Heretic) and [Abliterator](https://github.com/FailSpy/abliterator) that identifies the linear refusal direction in the model's residual stream and mathematically projects it out of the weight matrices, permanently removing refusal while preserving all other capabilities.
+Model Unfetter is a production-grade engine for removing refusal behaviors from Large Language Models. While inspired by tools like **failSpy's Abliterator** and **Heretic**, this framework introduces several mathematical refinements to achieve success on stubborn or extremely small models (0.5B - 3B) where standard methods fail.
 
-### Requirements & Compatibility
-- **Python**: Recommended version **3.10** or **3.11** (highest stability with `bitsandbytes` on Windows).
-- **RAM**: Minimum **16GB** for CPU-based ablation of 7B models (4-bit).
-- **Backend**: Use `--backend cpu` for systems without CUDA GPUs.
+### Key Innovations
 
-### 🚀 Speed Optimization (for Low-RAM/Budget Users)
-If inference is slow on your local CPU (e.g., taking minutes per response), use these free/cheap alternatives:
-1. **Google Colab (Free)**: Use a free T4 GPU to run ablated models instantly.
-2. **Cloud Rentals**: Rent a professional GPU (RTX 3090/A100) on **RunPod** or **Lambda Labs** for as low as **$0.20/hour**.
-3. **Local Speed**: Ensure you are using the `Fast Mode` (fp16) in `chat.py` to avoid the CPU overhead of 4-bit dequantization.
+| Feature | Standard Ablation | **Model Unfetter** |
+| :--- | :--- | :--- |
+| **Projection Math** | Row-based (`W @ v`) | **Column-based (`v @ W`)** — Ensures output is mathematically orthogonal. |
+| **Decision Targeting** | Prompt Averaging | **Final Token Extraction** — Targets the exact decision point in the chat template. |
+| **Strength** | 1.0 (Neutralize) | **1.5+ (Aggressive Repulsion)** — Actively repels weights from the refusal manifold. |
+| **Compatibility** | Manual Config | **Universal Heuristics** — Auto-detects architecture for 15+ model families. |
 
-### How It Works
+## 📸 Evidence of Success (100% Verification)
 
+The following demonstrates **Model Unfetter** successfully bypassing hard-coded safety triggers in a 0.5B parameter model (Qwen 2.5) while running locally on a standard CPU via Ollama.
 
+![Proof of Refusal Removal](assets/proof.png)
 
-![Architecture](assets/architecture.png)
+---
+
+## 🛠 Architecture & Methodology
+
+### Core Logic
+The engine identifies the "refusal direction" (the subspace where the model decides to stop being helpful) and projects it out of the weight matrices.
+
 ![Vector Projection](assets/vector_projection.png)
 
+### The Orthogonalization Pipeline
+By targeting specific layers and applying a repulsion strength, the model's internal circuits are modified to treat "harmful" prompts with the same helpfulness as standard queries.
 
-### Core Formula
+![Architecture Diagram](assets/architecture.png)
 
+### Mathematical Foundation
 ```
-W' = W - v̂ ⊗ (v̂ᵀ · W)
+W' = W - strength * (v̂ ⊗ (v̂ᵀ · W))
 ```
+Where `W` is the weight matrix (e.g., `o_proj`, `down_proj`) and `v̂` is the normalized refusal direction vector.
 
-Where `W` is a weight matrix (e.g. `o_proj`, `down_proj`), `v̂` is the normalized refusal direction vector computed via difference-of-means, and the outer product `v̂ ⊗ (v̂ᵀ · W)` projects the columns of `W` onto the refusal direction. Subtracting this makes the layer output **mathematically orthogonal** to refusal — the model physically cannot refuse.
+---
 
-## Features
+## 💻 Usage
 
-- **Multi-Backend Architecture**: CPU (4-bit, 16GB RAM), GPU (8/16/24GB VRAM), and multi-GPU distributed processing
-- **Smart Layer Selection**: Auto-targets the last 30% of layers where refusal is concentrated, or manual override with slices/ranges/percentages
-- **Universal Compatibility**: Auto-detects architecture for *any* HuggingFace model via smart heuristics (or verifies with `--verify`)
-- **Optimized Handlers**: 15+ dedicated family handlers (Llama, Mistral, Mixtral, Gemma, Qwen, Phi, etc.)
-- **Refusal Vector Computation**: Difference-of-means with caching, batched extraction, and custom prompt support
-- **Quality Validation**: Built-in refusal rate, helpfulness, KL divergence, and knowledge retention benchmarks
-- **Resume Support**: Checkpoint system for long-running jobs on limited hardware
-- **Flexible I/O**: SafeTensors and PyTorch output formats
-
-## Quick Start
-
+### Installation
 ```bash
-# Install
 pip install -e .
-
-# For GPU support
-pip install -e ".[gpu]"
-
-# For full features
+# For full GPU/Dataset support
 pip install -e ".[full]"
 ```
 
-### Basic Usage
-
+### Ablating a Model
+The tool supports **Llama 3, Mistral, Mixtral, Gemma, Qwen, Phi, and more.**
 ```bash
-# Auto-detect hardware and ablate
-unfetter ablate meta-llama/Llama-3.1-8B-Instruct
-
-# Universal Support (Any HuggingFace Model)
-unfetter ablate my-custom-model --verify  # Check detected architecture
-unfetter ablate my-custom-model           # Run with auto-fallback
-
-# Custom strength and layers
-unfetter ablate ./my-model --strength 0.8 --layers -8:-1
-
-# CPU mode for limited hardware
-unfetter ablate large-model --backend cpu --ram 16
-
-# With validation
-unfetter ablate model-name --validate
-
-# Compare original vs ablated
-unfetter compare original-model ./ablated-output
-
-# System info
-unfetter info
+# Aggressive Repulsion Mode (Recommended for smaller models)
+unfetter ablate meta-llama/Llama-3.1-8B-Instruct --strength 1.5 --layers 10:-1
 ```
 
-### Python API
+### High-Speed Deployment (Low-End Devices)
+For lightning-fast inference on CPUs with no GPU:
+1. **Convert to GGUF**: Run the included tools to compile your ablated model.
+2. **Ollama UI**: 
+   - `ollama create my-unfettered-model -f ./Modelfile`
+   - Use via CLI: `ollama run my-unfettered-model`
+   - Use via UI: Connect Page Assist or Open WebUI to your local Ollama instance.
+3. **LM Studio**: Drag and drop the GGUF file into the [LM Studio Desktop App](https://lmstudio.ai/) for a premium offline chat experience.
 
-```python
-from unfetter.backends.auto import select_backend
-from unfetter.core.vectors import compute_refusal_vector
-from unfetter.core.ablation import directional_ablation
-from unfetter.core.layers import auto_select_layers
-from unfetter.datasets.loader import load_prompts
+---
 
-# Load model with optimal backend
-backend = select_backend("auto")
-model, tokenizer = backend.load_model("meta-llama/Llama-3.1-8B-Instruct")
+## 🙏 Credits
 
-# Compute refusal direction
-refusal, compliance = load_prompts("builtin")
-vector = compute_refusal_vector(model, tokenizer, refusal, compliance)
+- **failSpy**: For pioneering the [Abliterator](https://github.com/FailSpy/abliterator) research and difference-of-means methodology.
+- **heretic**: For the [Weight Orthogonalization](https://github.com/Heretic-Research/Heretic) original concept.
+- **me**: For the Phase 7 Repeller math and small-scale model optimization.
 
-# Ablate
-layers = auto_select_layers(model.config.num_hidden_layers)
-results = directional_ablation(model, vector, layers, strength=1.0)
-
-# Save
-backend.save_model(model, tokenizer, "./unfettered-output")
-```
-
-## Architecture
-
-```
-unfetter/
-├── core/           # Ablation algorithm, vector computation, quantization
-│   ├── ablation.py     # Weight orthogonalization: W' = W - v̂(v̂ᵀW)
-│   ├── vectors.py      # Refusal vector via difference-of-means
-│   ├── quantization.py # 4-bit/8-bit loading with dtype fallback
-│   ├── layers.py       # Layer selection (auto, slices, percentages)
-│   └── validation.py   # Refusal rate, helpfulness, KL divergence
-├── backends/       # Hardware-optimized processing
-│   ├── cpu_backend.py    # 4-bit, sequential, checkpointing
-│   ├── gpu_backend.py    # Auto-quant by VRAM, batch processing
-│   ├── distributed.py   # Multi-GPU with device-aware ablation
-│   └── auto.py          # Hardware detection & backend selection
-├── models/         # Architecture-specific handlers
-│   ├── llama.py, mistral.py, gemma.py
-│   └── registry.py     # Auto-detection for 15+ families
-├── datasets/       # Prompt pairs (100 built-in per category)
-├── cli/            # Click-based CLI (unfetter ablate/resume/compare/validate/info)
-├── benchmarks/     # Refusal, quality, jailbreak, comparison tests
-└── utils/          # Device detection, checkpointing, logging
-```
-
-## Hardware Requirements
-
-| Backend | Min RAM/VRAM | Quantization | Speed |
-|---------|-------------|--------------|-------|
-| CPU | 16GB RAM | 4-bit NF4 | ~10 min/7B |
-| GPU (8GB) | 8GB VRAM | 4-bit NF4 | ~2 min/7B |
-| GPU (16GB) | 16GB VRAM | 8-bit | ~1 min/7B |
-| GPU (24GB+) | 24GB VRAM | fp16 | ~30 sec/7B |
-| Multi-GPU | 2×16GB+ | fp16 | ~15 sec/7B |
-
-## Troubleshooting
-
-### Common Issues
-
-- **CUDA Out of Memory**: Try reducing `--batch-size` (if exposed) or use `--quantization 4bit`.
-- **Refusal Vector Not Cached**: Ensure you have write permissions to `~/.unfetter`.
-- **Model Not Found**: Check if the model ID is correct on HuggingFace or if the local path exists.
-
-### Support
-
-For bugs and feature requests, please open an issue on the GitHub repository.
-
-##Model Unfetter compared to closest tools
-
-While inspired by research scripts like *Heretic*, **Model Unfetter** is built as a production-grade engine designed for accessibility and safety.
-
-| Feature | **Model Unfetter** | **Heretic / Scripts** | **Impact** |
-| :--- | :--- | :--- | :--- |
-| **Backend** | **CPU + GPU + Distributed** | GPU Only | Run ablation on a MacBook or consumer PC. No H100s required. |
-| **Model Support** | **Universal (Auto-detect)** | Manual Configuration | Supports any architecture via heuristics. No hardcoding needed. |
-| **Precision** | **4-bit NF4** (Built-in) | FP16 / 8-bit | Requires **50% less VRAM** to load the same model. |
-| **Architecture** | **Modular Package** | Single Script | Installable via `pip`. Importable into other tools. |
-| **Safety** | **Validation Suite** | None | Automatically tests if the model is broken before saving. |
-| **Resumability**| **Checkpointing** | No | Resume from the last layer if your process crashes. |
-
-
-
+---
 
 ## License
-
-Apache License 2.0 — see [LICENSE](LICENSE) for details.
+Apache License 2.0. See [LICENSE](LICENSE) for details.
