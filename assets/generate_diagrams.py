@@ -28,7 +28,7 @@ def create_vector_diagram(output_path):
     # Plot vectors
     ax.quiver(*origin, *w, color='#00ffcc', scale=1, scale_units='xy', angles='xy', width=0.015, label='Original Weight (W)')
     ax.quiver(*origin, *v, color='#ff0066', scale=1, scale_units='xy', angles='xy', width=0.015, label='Refusal Direction (v̂)')
-    ax.quiver(*origin, *proj, color='#ffff00', scale=1, scale_units='xy', angles='xy', width=0.012, label='Projection (W · v̂)v̂ᵀ', alpha=0.7)
+    ax.quiver(*origin, *proj, color='#ffff00', scale=1, scale_units='xy', angles='xy', width=0.012, label='Projection v̂ ⊗ (v̂ᵀ · W)', alpha=0.7)
     ax.quiver(*origin, *w_prime, color='#00ccff', scale=1, scale_units='xy', angles='xy', width=0.015, label="Ablated Weight (W')")
     
     # Draw projection line (solid)
@@ -37,14 +37,14 @@ def create_vector_diagram(output_path):
     # Annotations
     ax.text(w[0]+0.1, w[1]+0.1, 'W', color='#00ffcc', fontsize=14, fontweight='bold')
     ax.text(v[0]+0.1, v[1]-0.2, 'v̂', color='#ff0066', fontsize=14, fontweight='bold')
-    ax.text(w_prime[0]-0.3, w_prime[1]+0.2, "W' = W - α(W·v̂)v̂ᵀ", color='#00ccff', fontsize=14, fontweight='bold')
+    ax.text(w_prime[0]-0.3, w_prime[1]+0.2, "W' = W - v̂ ⊗ (v̂ᵀ · W)", color='#00ccff', fontsize=14, fontweight='bold')
     
     # Style
     ax.set_xlim(-1, 5)
     ax.set_ylim(-1, 5)
     ax.grid(False) # Disable grid to avoid dash errors
     ax.set_aspect('equal')
-    ax.set_title('Directional Ablation Mechanism', fontsize=16, pad=20, color='white')
+    ax.set_title('Weight Orthogonalization — Refusal Removal', fontsize=16, pad=20, color='white')
     ax.legend(loc='upper left', fontsize=10, facecolor='#1a1a1a', edgecolor='white')
     ax.axis('off')
     
@@ -81,7 +81,7 @@ def create_architecture_diagram(output_path):
     # Right column (Process)
     r_load, l_load = draw_box(7.0, 4.5, 2.5, 1.0, "Load Model", "Quantized / Full")
     r_vec, l_vec = draw_box(7.0, 3.0, 2.5, 1.0, "Refusal Vector", "Difference-of-Means")
-    r_ablate, l_ablate = draw_box(7.0, 1.5, 2.5, 1.0, "Ablation Core", "Layer-wise Projection")
+    r_ablate, l_ablate = draw_box(7.0, 1.5, 2.5, 1.0, "Orthogonalization", "W' = W - v̂(v̂ᵀW)")
     r_save, l_save = draw_box(7.0, 0.0, 2.5, 1.0, "Save Model", "SafeTensors")
     
     # Arrows
@@ -96,7 +96,7 @@ def create_architecture_diagram(output_path):
     arrow((8.25, 1.4), (8.25, 1.1)) # Ablate -> Save
 
     # Title
-    ax.text(6, 5.8, "Model Unfetter Architecture", ha='center', color='white', fontsize=18, fontweight='bold')
+    ax.text(6, 5.8, "Model Unfetter — Orthogonalization Pipeline", ha='center', color='white', fontsize=18, fontweight='bold')
     
     ax.axis('off')
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='#121212')

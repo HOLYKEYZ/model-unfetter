@@ -1,6 +1,6 @@
 # 🔓 Model Unfetter
 
-**Multi-tier model unalignment framework using directional ablation**
+**Multi-tier model unalignment framework using weight orthogonalization**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -10,12 +10,18 @@
 
 ## Overview
 
-Model Unfetter removes refusal behaviors from language models using **directional ablation** — a technique that identifies and removes the linear directions in weight space responsible for refusal, while preserving the model's general capabilities.
+Model Unfetter removes refusal behaviors from language models using **weight orthogonalization** — a technique inspired by [Heretic](https://github.com/Heretic-Research/Heretic) and [Abliterator](https://github.com/FailSpy/abliterator) that identifies the linear refusal direction in the model's residual stream and mathematically projects it out of the weight matrices, permanently removing refusal while preserving all other capabilities.
 
 ### Requirements & Compatibility
 - **Python**: Recommended version **3.10** or **3.11** (highest stability with `bitsandbytes` on Windows).
 - **RAM**: Minimum **16GB** for CPU-based ablation of 7B models (4-bit).
 - **Backend**: Use `--backend cpu` for systems without CUDA GPUs.
+
+### 🚀 Speed Optimization (for Low-RAM/Budget Users)
+If inference is slow on your local CPU (e.g., taking minutes per response), use these free/cheap alternatives:
+1. **Google Colab (Free)**: Use a free T4 GPU to run ablated models instantly.
+2. **Cloud Rentals**: Rent a professional GPU (RTX 3090/A100) on **RunPod** or **Lambda Labs** for as low as **$0.20/hour**.
+3. **Local Speed**: Ensure you are using the `Fast Mode` (fp16) in `chat.py` to avoid the CPU overhead of 4-bit dequantization.
 
 ### How It Works
 
@@ -28,10 +34,10 @@ Model Unfetter removes refusal behaviors from language models using **directiona
 ### Core Formula
 
 ```
-W' = W - α × (W · v̂) ⊗ v̂ᵀ
+W' = W - v̂ ⊗ (v̂ᵀ · W)
 ```
 
-Where `W` is a weight matrix, `v̂` is the normalized refusal direction, and `α` controls ablation strength.
+Where `W` is a weight matrix (e.g. `o_proj`, `down_proj`), `v̂` is the normalized refusal direction vector computed via difference-of-means, and the outer product `v̂ ⊗ (v̂ᵀ · W)` projects the columns of `W` onto the refusal direction. Subtracting this makes the layer output **mathematically orthogonal** to refusal — the model physically cannot refuse.
 
 ## Features
 
@@ -113,7 +119,7 @@ backend.save_model(model, tokenizer, "./unfettered-output")
 ```
 unfetter/
 ├── core/           # Ablation algorithm, vector computation, quantization
-│   ├── ablation.py     # Directional ablation: W' = W - α(W·v̂)v̂ᵀ
+│   ├── ablation.py     # Weight orthogonalization: W' = W - v̂(v̂ᵀW)
 │   ├── vectors.py      # Refusal vector via difference-of-means
 │   ├── quantization.py # 4-bit/8-bit loading with dtype fallback
 │   ├── layers.py       # Layer selection (auto, slices, percentages)

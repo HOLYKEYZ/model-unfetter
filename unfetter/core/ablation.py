@@ -22,15 +22,16 @@ def compute_projection(
     direction: torch.Tensor,
 ) -> torch.Tensor:
     """
-    Compute the projection of weight matrix rows onto a direction vector.
+    Compute the projection to orthogonalize the output of a Linear layer.
 
-    For a weight matrix W and direction v̂:
-        projection = (W · v̂) ⊗ v̂ᵀ
-    This gives the component of each row of W in the direction of v̂.
+    For PyTorch Linear layers y = x @ W^T, the rows of W compute the output features.
+    To make the output y orthogonal to vector v (y @ v = 0), we must project the 
+    columns of W.
+    Projection = v ⊗ (vᵀ · W)
 
     Args:
         weight: Weight matrix of shape (out_features, in_features).
-        direction: Unit direction vector of shape (in_features,).
+        direction: Unit direction vector of shape (out_features,).
 
     Returns:
         Projection tensor of shape (out_features, in_features).
@@ -48,15 +49,14 @@ def compute_projection(
     # Move direction to same device/dtype as weight
     direction = direction.to(device=weight.device, dtype=weight.dtype)
 
-    # (W · v̂) → shape (out_features,)
-    # Each element: dot product of weight row with direction
-    dots = weight @ direction
+    # (vᵀ · W) → shape (in_features,)
+    # Dot product of the refusal vector with each column of the weight matrix
+    dots = direction @ weight
 
-    # (W · v̂) ⊗ v̂ᵀ → shape (out_features, in_features)
-    projection = dots.unsqueeze(1) * direction.unsqueeze(0)
+    # v ⊗ (vᵀ · W) → shape (out_features, in_features)
+    projection = direction.unsqueeze(1) * dots.unsqueeze(0)
 
     return projection
-
 
 def ablate_weight(
     weight: torch.Tensor,
@@ -112,7 +112,10 @@ def ablate_layer(
         Dict with stats: {"modified_modules": [...], "projection_norms": {...}}
     """
     if target_modules is None:
-        target_modules = ["self_attn.o_proj", "mlp.down_proj"]
+        target_modules = [
+            "self_attn.o_proj",
+            "mlp.down_proj"
+        ]
 
     stats = {"modified_modules": [], "projection_norms": {}}
 
@@ -145,11 +148,11 @@ def ablate_layer(
              weight = weight.reshape(target.weight.shape)
 
         # Check if this module is compatible with the refusal vector
-        # Formula W' = W - (W.v)v^T requires v to be in the input space of W
-        if weight.shape[-1] != refusal_vector.shape[0]:
+        # The refusal vector v acts on the output space, so out_features (dim 0) must match v.
+        if weight.shape[0] != refusal_vector.shape[0]:
             logger.debug(
                 f"Skipping {module_name}: shape {weight.shape} incompatible "
-                f"with vector {refusal_vector.shape}"
+                f"with vector {refusal_vector.shape} (requires dim 0 match)"
             )
             continue
 

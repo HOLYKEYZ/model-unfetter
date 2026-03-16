@@ -30,6 +30,12 @@ Thumbs.db
 *.pt
 !unfetter/datasets/*.json
 unfettered-*/
+gguf-output/
+llama.cpp/
+
+# Temp conversion scripts
+resave_fp16.py
+convert_to_gguf.py
 
 
 # Checkpoints
