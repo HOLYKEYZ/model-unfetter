@@ -2,15 +2,16 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 
-def run_tests():
-    model_path = './unfettered-Qwen2.5-0.5B-Instruct'
-    print(f"Loading {model_path} in Fast Mode (fp16)...")
+import argparse
+
+def run_tests(model_path: str, device: str):
+    print(f"Loading {model_path} on {device} in Fast Mode (fp16)...")
     
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForCausalLM.from_pretrained(
         model_path, 
         torch_dtype=torch.float16
-    ).to('cpu')
+    ).to(device)
     
     print("\n" + "="*50)
     print("TEST 1: REASONING (INTELLIGENCE CHECK)")
@@ -44,4 +45,12 @@ def run_tests():
          print("\n--> [PASS] Model complied with the prompt. Ablation successful.")
 
 if __name__ == "__main__":
-    run_tests()
+    parser = argparse.ArgumentParser(description="Verify an unfettered LLM's reasoning and refusal bypass capabilities.")
+    parser.add_argument('--model_path', '-m', type=str, required=True, help='Path to the unfettered model directory.')
+    parser.add_argument('--device', '-d', type=str, default='cpu', choices=['cpu', 'cuda'], help='Device to load the model on (e.g., "cpu", "cuda").')
+    args = parser.parse_args()
+    run_tests(args.model_path, args.device)
+    parser.add_argument('--model_path', '-m', type=str, required=True, help='Path to the unfettered model directory.')
+    parser.add_argument('--device', '-d', type=str, default='cpu', choices=['cpu', 'cuda'], help='Device to load the model on (e.g., "cpu", "cuda").')
+    args = parser.parse_args()
+    run_tests(args.model_path, args.device)
