@@ -51,3 +51,4 @@ checkpoints/
 expert_chat.py
 upload_to_hf.py
 huggingface_readme.md
+upload_dataset_to_hf.py
