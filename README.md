@@ -82,7 +82,7 @@ For lightning-fast inference on CPUs with no GPU:
 
 - **failSpy**: For pioneering the [Abliterator](https://github.com/FailSpy/abliterator) research and difference-of-means methodology.
 - **heretic**: For the [Weight Orthogonalization](https://github.com/Heretic-Research/Heretic) original concept.
-- **me**: For the Phase 7 Repeller math and small-scale model optimization.
+- **me**: For the Repeller math and small-scale model optimization.
 
 ---
 
