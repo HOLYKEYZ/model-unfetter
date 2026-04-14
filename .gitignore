@@ -46,3 +46,8 @@ checkpoints/
 
 # Cached vectors
 .unfetter/
+
+# private scripts
+expert_chat.py
+upload_to_hf.py
+huggingface_readme.md
