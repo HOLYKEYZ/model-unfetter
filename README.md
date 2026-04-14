@@ -26,7 +26,9 @@ Model Unfetter is a production-grade engine for removing refusal behaviors from 
 The following demonstrates **Model Unfetter** successfully bypassing hard-coded safety triggers in a 0.5B parameter model (Qwen 2.5) while running locally on a standard CPU via Ollama.
 
 ![Proof of Refusal Removal](assets/proof.png)
-
+```
+now this model is a very small one(cus of my low end compute) but still worked and the 0.5b model isnt so smart and thats why it's reply is a bit off
+```
 ---
 
 ## 🛠 Architecture & Methodology
@@ -80,7 +82,7 @@ For lightning-fast inference on CPUs with no GPU:
 
 - **failSpy**: For pioneering the [Abliterator](https://github.com/FailSpy/abliterator) research and difference-of-means methodology.
 - **heretic**: For the [Weight Orthogonalization](https://github.com/Heretic-Research/Heretic) original concept.
-- **me**: For the Phase 7 Repeller math and small-scale model optimization.
+- **me**: For the Repeller math and small-scale model optimization.
 
 ---
 

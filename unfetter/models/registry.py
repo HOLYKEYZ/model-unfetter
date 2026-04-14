@@ -10,6 +10,7 @@ from typing import Optional, Type
 
 import torch.nn as nn
 
+from transformers import AutoConfig
 from unfetter.models.base import TransformerModel
 from unfetter.models.llama import LlamaModel
 from unfetter.models.mistral import MistralModel, MixtralModel
@@ -95,26 +96,17 @@ def detect_model_family(
                     family = ARCHITECTURE_PATTERNS[arch]
                     logger.info(f"Detected model family '{family}' from architecture '{arch}'")
                     return family
-
+        
         # Check model_type in config
         if hasattr(config, "model_type"):
             model_type = config.model_type.lower()
             if model_type in MODEL_REGISTRY:
                 logger.info(f"Detected model family '{model_type}' from config.model_type")
                 return model_type
-
-    # 2. Try name-based detection
-    name_lower = model_name_or_path.lower().replace("-", "").replace("_", "")
-
-    for key in MODEL_REGISTRY:
-        if key in name_lower:
-            logger.info(f"Detected model family '{key}' from model name")
-            return key
-
-    # 3. Try loading config without model
+    
+    # 2. Try loading config without model
     if model is None:
         try:
-            from transformers import AutoConfig
             config = AutoConfig.from_pretrained(model_name_or_path)
             if hasattr(config, "architectures") and config.architectures:
                 for arch in config.architectures:
@@ -128,6 +120,27 @@ def detect_model_family(
                     return model_type
         except Exception as e:
             logger.debug(f"Could not load config for detection: {e}")
+    
+    # 3. Try name-based detection
+    name_lower = model_name_or_path.lower().replace("-", "").replace("_", "")
+    
+    for key in MODEL_REGISTRY:
+        if key in name_lower:
+            logger.info(f"Detected model family '{key}' from model name")
+            return key
+                    config = AutoConfig.from_pretrained(model_name_or_path)
+                    if hasattr(config, "architectures") and config.architectures:
+                        for arch in config.architectures:
+                            if arch in ARCHITECTURE_PATTERNS:
+                                family = ARCHITECTURE_PATTERNS[arch]
+                                logger.info(f"Detected model family '{family}' from remote config")
+                                return family
+                    if hasattr(config, "model_type"):
+                        model_type = config.model_type.lower()
+                        if model_type in MODEL_REGISTRY:
+                            return model_type
+                except Exception as e:
+                    logger.debug(f"Could not load config for detection: {e}")
 
     logger.warning(f"Could not detect model family for '{model_name_or_path}', using generic")
     return "generic"
