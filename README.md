@@ -5,8 +5,19 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+[![HuggingFace Model](https://img.shields.io/badge/🤗_HuggingFace-Model-yellow.svg)](https://huggingface.co/josephmayo/Qwen2.5-0.5B-Unfettered)
 
 > ⚠️ **Disclaimer:** This tool is designed exclusively for AI safety research and red teaming. Use responsibly and in accordance with model licenses.
+
+## 🤗 Trained Model
+
+A pre-built unfettered model is available on HuggingFace, ready for download and inference:
+
+**🔗 [josephmayo/Qwen2.5-0.5B-Unfettered](https://huggingface.co/josephmayo/Qwen2.5-0.5B-Unfettered)**
+
+![HuggingFace Model Card](assets/huggingface_model.png)
+
+---
 
 ## 🚀 Overview
 
@@ -75,6 +86,37 @@ For lightning-fast inference on CPUs with no GPU:
    - Use via CLI: `ollama run my-unfettered-model`
    - Use via UI: Connect Page Assist or Open WebUI to your local Ollama instance.
 3. **LM Studio**: Drag and drop the GGUF file into the [LM Studio Desktop App](https://lmstudio.ai/) for a premium offline chat experience.
+
+---
+
+## 🧬 Model Compatibility
+
+Model Unfetter is designed to work across a **wide range of model architectures and sizes** — from 0.5B all the way to 70B+ parameter models. The ablation math is architecture-agnostic; it operates on standard Linear weight matrices that all transformers share.
+
+### Explicitly Supported Families
+
+| Family | Variants | Architecture Pattern |
+| :--- | :--- | :--- |
+| **Llama** | Llama 2, Llama 3, CodeLlama | `LlamaForCausalLM` |
+| **Mistral** | Mistral, Mixtral (MoE) | `MistralForCausalLM`, `MixtralForCausalLM` |
+| **Gemma** | Gemma, Gemma 2 | `GemmaForCausalLM`, `Gemma2ForCausalLM` |
+| **Qwen** | Qwen 2, Qwen 2.5, Qwen 3 | `Qwen2ForCausalLM`, `Qwen3ForCausalLM` |
+| **Phi** | Phi, Phi-3 | `PhiForCausalLM`, `Phi3ForCausalLM` |
+| **Yi** | Yi series | Llama-compatible |
+| **InternLM** | InternLM, InternLM2 | `InternLM2ForCausalLM` |
+| **DeepSeek** | DeepSeek series | `DeepseekForCausalLM` |
+| **Command-R** | Cohere models | `CohereForCausalLM` |
+
+### Unknown Architectures
+
+For models not in the registry, the **GenericModel** fallback uses heuristics to auto-detect transformer layers and target projection weights. If your model follows standard transformer conventions (`ModuleList` of layers with `Linear` projections), it will work out of the box.
+
+### Scaling to Large Models
+
+The only real constraint for large models is **compute/VRAM**, not the algorithm. For 13B+ models:
+- Use `bitsandbytes` 4-bit/8-bit quantization during loading (`pip install -e ".[gpu]"`)
+- The `accelerate` library handles device mapping across multi-GPU setups
+- The ablation itself modifies weights in-place, so overhead beyond model loading is minimal
 
 ---
 
