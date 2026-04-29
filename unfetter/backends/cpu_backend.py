@@ -1,7 +1,7 @@
 """
 CPU backend for systems with limited or no GPU resources.
 
-Optimized for 16GB RAM systems using:
+Optimized for 16/8/4-GB RAM systems using:
 - 4-bit NF4 quantization to reduce memory
 - Layer-by-layer sequential processing
 - Disk offloading for large models
