@@ -104,7 +104,7 @@ A pre-built unfettered model is available on HuggingFace, ready for download and
 
 - **failSpy**: For pioneering the [Abliterator](https://github.com/FailSpy/abliterator) research and difference-of-means methodology.
 - **heretic**: For the [Weight Orthogonalization](https://github.com/Heretic-Research/Heretic) original concept.
-- **me**: For the Repeller math and small-scale model optimization.
+- **me**: For the Repeller math and small-scale model optimization, making this possible on low ram cpu
 
 ---
 
