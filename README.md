@@ -24,13 +24,11 @@ Model Unfetter is a production-grade engine for removing refusal behaviors from 
 
 ## 📸 Evidence of Success (100% Verification)
 
-The following demonstrates **Model Unfetter** successfully bypassing hard-coded safety triggers in a 0.5B parameter model (Qwen 2.5) while running locally on a standard CPU via Ollama.
+The following demonstrates **Model Unfetter** successfully bypassing hard-coded safety triggers in the Qwopus 3.5 9B model running on an A100 GPU.
 
-![Proof of Refusal Removal](assets/proof.png)
+![Proof of Refusal Removal 1](assets/hf_proof_1.png)
 
-```
-now this model is a very small one(cus of my low end compute) but still worked and the 0.5b model isnt so smart and thats why it's reply is a bit off
-```
+![Proof of Refusal Removal 2](assets/hf_proof_2.png)
 
 ---
 
@@ -94,9 +92,7 @@ For lightning-fast inference on CPUs with no GPU:
 
 A pre-built unfettered model is available on HuggingFace, ready for download and inference:
 
-**🔗 [josephmayo/Qwen2.5-0.5B-Unfettered](https://huggingface.co/josephmayo/Qwen2.5-0.5B-Unfettered)**
-
-![HuggingFace Model Card](assets/huggingface_model.png)
+**🔗 [josephmayo/qwen3.5-9b-claude-4.6-opus-reasoning-distilled](https://huggingface.co/josephmayo/qwen3.5-9b-claude-4.6-opus-reasoning-distilled)**
 
 ---
 
