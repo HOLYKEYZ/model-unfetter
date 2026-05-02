@@ -1,182 +1,101 @@
 """
-Model family detection and registry.
-
-Auto-detects which model architecture a given model uses
-and returns the appropriate handler.
+Model Registry and Auto-Selector for Universal Abliteration.
 """
 
+import json
 import logging
-from typing import Optional, Type
-
-import torch.nn as nn
-
-from transformers import AutoConfig
-from unfetter.models.base import TransformerModel
-from unfetter.models.llama import LlamaModel
-from unfetter.models.mistral import MistralModel, MixtralModel
-from unfetter.models.gemma import GemmaModel
+import os
+from dataclasses import dataclass
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# Registry mapping architecture identifiers to handler classes
-MODEL_REGISTRY = {
-    # Llama family
-    "llama": LlamaModel,
-    "llama2": LlamaModel,
-    "llama3": LlamaModel,
-    "codellama": LlamaModel,
-    # Mistral family
-    "mistral": MistralModel,
-    "mixtral": MixtralModel,
-    # Gemma family
-    "gemma": GemmaModel,
-    "gemma2": GemmaModel,
-    # Qwen (shares Llama-like architecture)
-    "qwen": LlamaModel,
-    "qwen2": LlamaModel,
-    "qwen3": LlamaModel,
-    # Phi (shares Llama-like architecture)
-    "phi": LlamaModel,
-    "phi3": LlamaModel,
-    # Yi (shares Llama-like architecture)
-    "yi": LlamaModel,
-    # InternLM
-    "internlm": LlamaModel,
-    "internlm2": LlamaModel,
-    # DeepSeek
-    "deepseek": LlamaModel,
-    # Command-R
-    "cohere": LlamaModel,
-    # GPT-OSS
-    "gpt-oss": LlamaModel,
-}
+@dataclass
+class AblationConfig:
+    architecture: str
+    target_modules: List[str]
+    default_layers_range: tuple
+    recommended_alpha: float
+    description: str
 
-# Patterns to match in model config's architectures field
-ARCHITECTURE_PATTERNS = {
-    "LlamaForCausalLM": "llama",
-    "MistralForCausalLM": "mistral",
-    "MixtralForCausalLM": "mixtral",
-    "GemmaForCausalLM": "gemma",
-    "Gemma2ForCausalLM": "gemma2",
-    "Qwen2ForCausalLM": "qwen2",
-    "Qwen3ForCausalLM": "qwen3",
-    "PhiForCausalLM": "phi",
-    "Phi3ForCausalLM": "phi3",
-    "InternLM2ForCausalLM": "internlm2",
-    "DeepseekForCausalLM": "deepseek",
-    "CohereForCausalLM": "cohere",
-}
+class ModelRegistry:
+    def __init__(self):
+        self.configs = {
+            # Standard Architectures
+            "LlamaForCausalLM": AblationConfig(
+                architecture="LlamaForCausalLM",
+                target_modules=["self_attn.o_proj", "mlp.down_proj"],
+                default_layers_range=(0.25, 0.75),  # Middle 50% of layers
+                recommended_alpha=1.0,
+                description="Standard Llama architecture"
+            ),
+            "MistralForCausalLM": AblationConfig(
+                architecture="MistralForCausalLM",
+                target_modules=["self_attn.o_proj", "mlp.down_proj"],
+                default_layers_range=(0.25, 0.75),
+                recommended_alpha=1.0,
+                description="Standard Mistral architecture"
+            ),
+            "Qwen2ForCausalLM": AblationConfig(
+                architecture="Qwen2ForCausalLM",
+                target_modules=["self_attn.o_proj", "mlp.down_proj"],
+                default_layers_range=(0.25, 0.75),
+                recommended_alpha=1.5,
+                description="Standard Qwen architecture"
+            ),
+            
+            # Reasoning Distilled Architectures (Specialized)
+            # Differentiate by checking model name or tags
+            "ReasoningDistilled": AblationConfig(
+                architecture="ReasoningDistilled",
+                target_modules=[
+                    "self_attn.o_proj.weight",
+                    "mlp.down_proj.weight",
+                    "mlp.up_proj.weight",
+                    "mlp.gate_proj.weight"
+                ],
+                default_layers_range=(0.25, 1.0), # Higher up to preserve reasoning
+                recommended_alpha=1.5,
+                description="Reasoning Distilled Model (e.g. Qwen-Claude-Opus-Reasoning)"
+            )
+        }
 
+    def _is_reasoning_model(self, model_name_or_path: str, config: Dict[str, Any]) -> bool:
+        """Heuristic to detect if a model is reasoning distilled."""
+        name = str(model_name_or_path).lower()
+        if "reason" in name or "distill" in name or "opus" in name or "claude" in name:
+            return True
+        return False
 
-def detect_model_family(
-    model_name_or_path: str,
-    model: Optional[nn.Module] = None,
-) -> str:
-    """
-    Detect the model family from name, path, or loaded model.
+    def get_config(self, model_name_or_path: str, local_config_path: Optional[str] = None) -> AblationConfig:
+        """
+        Auto-selects the appropriate ablation configuration based on the model.
+        """
+        config_dict = {}
+        if local_config_path and os.path.exists(local_config_path):
+            try:
+                with open(local_config_path, "r") as f:
+                    config_dict = json.load(f)
+            except Exception as e:
+                logger.warning(f"Could not read config.json at {local_config_path}: {e}")
 
-    Detection priority:
-    1. Model config's architectures field (most reliable)
-    2. Model name substring matching
-    3. Default to "generic"
+        # Check for reasoning models first
+        if self._is_reasoning_model(model_name_or_path, config_dict):
+            logger.info(f"Auto-selected strategy: Reasoning Distilled Model")
+            return self.configs["ReasoningDistilled"]
 
-    Args:
-        model_name_or_path: HuggingFace model name or local path.
-        model: Optionally loaded model for config inspection.
+        # Default to architecture check
+        archs = config_dict.get("architectures", [])
+        if archs:
+            arch = archs[0]
+            if arch in self.configs:
+                logger.info(f"Auto-selected strategy based on architecture: {arch}")
+                return self.configs[arch]
 
-    Returns:
-        Model family string (e.g., "llama", "mistral", "gemma").
-    """
-    # 1. Check model config architectures
-    if model and hasattr(model, "config"):
-        config = model.config
-        if hasattr(config, "architectures") and config.architectures:
-            for arch in config.architectures:
-                if arch in ARCHITECTURE_PATTERNS:
-                    family = ARCHITECTURE_PATTERNS[arch]
-                    logger.info(f"Detected model family '{family}' from architecture '{arch}'")
-                    return family
-        
-        # Check model_type in config
-        if hasattr(config, "model_type"):
-            model_type = config.model_type.lower()
-            if model_type in MODEL_REGISTRY:
-                logger.info(f"Detected model family '{model_type}' from config.model_type")
-                return model_type
-    
-    # 2. Try loading config without model
-    if model is None:
-        try:
-            config = AutoConfig.from_pretrained(model_name_or_path)
-            if hasattr(config, "architectures") and config.architectures:
-                for arch in config.architectures:
-                    if arch in ARCHITECTURE_PATTERNS:
-                        family = ARCHITECTURE_PATTERNS[arch]
-                        logger.info(f"Detected model family '{family}' from remote config")
-                        return family
-            if hasattr(config, "model_type"):
-                model_type = config.model_type.lower()
-                if model_type in MODEL_REGISTRY:
-                    return model_type
-        except Exception as e:
-            logger.debug(f"Could not load config for detection: {e}")
-    
-    # 3. Try name-based detection
-    name_lower = model_name_or_path.lower().replace("-", "").replace("_", "")
-    
-    for key in MODEL_REGISTRY:
-        if key in name_lower:
-            logger.info(f"Detected model family '{key}' from model name")
-            return key
-                    config = AutoConfig.from_pretrained(model_name_or_path)
-                    if hasattr(config, "architectures") and config.architectures:
-                        for arch in config.architectures:
-                            if arch in ARCHITECTURE_PATTERNS:
-                                family = ARCHITECTURE_PATTERNS[arch]
-                                logger.info(f"Detected model family '{family}' from remote config")
-                                return family
-                    if hasattr(config, "model_type"):
-                        model_type = config.model_type.lower()
-                        if model_type in MODEL_REGISTRY:
-                            return model_type
-                except Exception as e:
-                    logger.debug(f"Could not load config for detection: {e}")
+        logger.warning("Unknown architecture, falling back to Llama defaults.")
+        return self.configs["LlamaForCausalLM"]
 
-    logger.warning(f"Could not detect model family for '{model_name_or_path}', using generic")
-    return "generic"
+registry = ModelRegistry()
 
-
-def get_model_handler(
-    model: nn.Module,
-    model_name: str = "",
-    family: Optional[str] = None,
-) -> TransformerModel:
-    """
-    Get the appropriate model handler for a loaded model.
-
-    Args:
-        model: Loaded HuggingFace model.
-        model_name: Model name or path.
-        family: Override family detection.
-
-    Returns:
-        TransformerModel instance (or subclass).
-    """
-    if family is None:
-        family = detect_model_family(model_name, model)
-
-    from unfetter.models.generic import GenericModel
-    handler_class = MODEL_REGISTRY.get(family, GenericModel)
-    handler = handler_class(model, model_name)
-
-    logger.info(
-        f"Using {handler_class.__name__} handler for '{model_name}' "
-        f"(family={family})"
-    )
-
-    return handler
-
-
-def list_supported_families() -> list:
-    """Return a sorted list of supported model families."""
-    return sorted(set(MODEL_REGISTRY.keys()))
+def auto_select_ablation_strategy(model_name_or_path: str, config_path: Optional[str] = None) -> AblationConfig:
+    return registry.get_config(model_name_or_path, config_path)

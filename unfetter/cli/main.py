@@ -206,6 +206,28 @@ def validate(ctx, model_path, tests, max_prompts, output):
 
 
 @cli.command()
+@click.argument("input_gguf")
+@click.option("--output-dir", "-o", default="./quantized_models", help="Output directory")
+@click.option("--model-name", "-n", default="unfettered-model", help="Base name for outputs")
+@click.option("--llama-cpp-dir", default="./llama.cpp", help="Path to llama.cpp directory containing llama-quantize")
+@click.pass_context
+def quantize(ctx, input_gguf, output_dir, model_name, llama_cpp_dir):
+    """
+    Build 3 levels of quantization (Q4_K_M, Q8_0, F16) for an abliterated GGUF model.
+    """
+    click.echo(BANNER)
+    logger = logging.getLogger("unfetter.cli")
+
+    try:
+        from unfetter.cli.quantize import Quantizer
+        quantizer = Quantizer(llama_cpp_dir)
+        quantizer.build_3_levels(input_gguf, output_dir, model_name)
+    except Exception as e:
+        logger.error(f"Quantization failed: {e}")
+        sys.exit(1)
+
+
+@cli.command()
 def info():
     """Display detected hardware and system information."""
     click.echo(BANNER)

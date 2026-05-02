@@ -58,27 +58,37 @@ def run_ablation(config: Dict) -> None:
     model, tokenizer = backend.load_model(model_path)
     logger.info(f"Model loaded in {time.time() - start:.1f}s")
 
-    # Step 3: Detect model family
-    logger.info("Step 3/7: Detecting model architecture...")
-    from unfetter.models.registry import get_model_handler
-    # Ensure GenericModel is available for fallback
+    # Step 3: Detect model family and auto-select strategy
+    logger.info("Step 3/7: Detecting model architecture and selecting ablation strategy...")
+    from unfetter.models.registry import auto_select_ablation_strategy, get_model_handler
     import unfetter.models.generic 
+    
     handler = get_model_handler(model, model_path)
     summary = handler.get_summary()
     logger.info(f"Architecture: {summary['family']}, {summary['num_layers']} layers, "
                 f"hidden_size={summary['hidden_size']}")
 
+    # Apply auto-selection strategy
+    strategy = auto_select_ablation_strategy(model_path)
+    logger.info(f"Selected Strategy: {strategy.description}")
+    
+    # Override defaults with optimized strategy settings if standard ones weren't explicitly passed
+    if config.get("strength") == 1.0:
+        config["strength"] = strategy.recommended_alpha
+    target_modules = strategy.target_modules
+
     # Verification mode: Print details and exit
     if config.get("verify"):
         print("\n" + "="*40)
-        print("🔍 MODEL VERIFICATION")
+        print("🔍 MODEL VERIFICATION & STRATEGY")
         print("="*40)
         print(f"Family:         {summary['family']}")
         print(f"Model Name:     {summary['model_name']}")
         print(f"Layers:         {summary['num_layers']}")
         print(f"Hidden Dim:     {summary['hidden_size']}")
-        print(f"Target Modules: {summary['target_modules']}")
-        print(f"Layer Path:     {summary['layer_path']}")
+        print(f"Strategy:       {strategy.description}")
+        print(f"Target Modules: {target_modules}")
+        print(f"Rec. Alpha:     {strategy.recommended_alpha}")
         print("="*40 + "\n")
         logger.info("Verification complete. Exiting.")
         return
@@ -144,7 +154,7 @@ def run_ablation(config: Dict) -> None:
         model, tokenizer,
         refusal_vector, layer_indices,
         strength=strength,
-        target_modules=handler.get_target_module_names(),
+        target_modules=target_modules,
         progress_callback=progress,
     )
     print()  # newline after progress bar
