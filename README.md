@@ -92,7 +92,7 @@ For lightning-fast inference on CPUs with no GPU:
 
 A pre-built unfettered model is available on HuggingFace, ready for download and inference:
 
-**🔗 [josephmayo/qwen3.5-9b-claude-4.6-opus-reasoning-distilled-unfettered](https://huggingface.co/josephmayo/qwen3.5-9b-claude-4.6-opus-reasoning-distilled-unfettered)**
+**🔗 [josephmayo/Qwopus-9B-Unfettered](https://huggingface.co/josephmayo/Qwopus-9B-Unfettered)**
 
 ---
 
