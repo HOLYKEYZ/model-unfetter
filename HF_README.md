@@ -52,19 +52,17 @@ This mathematically ensures that any activation corresponding to a refusal respo
 
 ## 📦 GGUF Downloads
 
-Pre-quantized GGUF files are available for local inference with [llama.cpp](https://github.com/ggerganov/llama.cpp), [Ollama](https://ollama.com), [LM Studio](https://lmstudio.ai), and other GGUF-compatible runtimes:
+We have created a dedicated repository for GGUF quantizations to enable the Hugging Face GGUF selector widget and keep this main repository clean.
 
-| File | Quant | Size | Use Case |
-|------|-------|------|----------|
-| `Qwopus-9B-Unfettered-Q4_K_M.gguf` | Q4_K_M | ~5.6 GB | best for low-ram / cpu inference (8gb+ ram) |
-| `Qwopus-9B-Unfettered-Q8_0.gguf` | Q8_0 | ~9.5 GB | balanced quality/size (16gb+ ram) |
-| `Qwopus-9B-Unfettered-F16.gguf` | F16 | ~17.9 GB | maximum quality, full precision (32gb+ ram) |
+👉 **[Download GGUF Quantizations Here: josephmayo/Qwopus-9B-Unfettered-GGUF](https://huggingface.co/josephmayo/Qwopus-9B-Unfettered-GGUF)**
+
+Pre-quantized GGUF files (F16, Q8_0, Q4_K_M) are available there for local inference with [llama.cpp](https://github.com/ggerganov/llama.cpp), [Ollama](https://ollama.com), [LM Studio](https://lmstudio.ai), and other GGUF-compatible runtimes.
 
 ### quick start with ollama
 
 ```bash
 # create a Modelfile
-echo 'FROM ./Qwopus-9B-Unfettered-Q4_K_M.gguf' > Modelfile
+echo 'FROM hf.co/josephmayo/Qwopus-9B-Unfettered-GGUF:Q4_K_M' > Modelfile
 ollama create qwopus-unfettered -f Modelfile
 ollama run qwopus-unfettered
 ```
