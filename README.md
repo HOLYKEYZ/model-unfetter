@@ -11,7 +11,7 @@
 
 ## 🚀 Overview
 
-Model Unfetter is a production-grade engine for removing refusal behaviors from Large Language Models. While inspired by tools like **failSpy's Abliterator** and **Heretic**, this framework introduces several mathematical refinements to achieve success on stubborn or extremely small models (0.5B - 3B) where standard methods fail.
+Model Unfetter is a production-grade engine for removing refusal behaviors from Large Language Models. While inspired by tools like **failSpy's Abliterator** and **Heretic**, this framework introduces several mathematical refinements to achieve success on stubborn or extremely small models (0.5B - 3B, complex CoTs, GGUFs, and first framework to run on CPU) where standard methods fail.
 
 ### Key Innovations
 
