@@ -1,0 +1,27 @@
+{
+  "kept": 80,
+  "subreddits": [
+    "learnpython",
+    "learnprogramming",
+    "AskProgramming",
+    "Python",
+    "javascript",
+    "learnjavascript",
+    "reactjs",
+    "node",
+    "webdev",
+    "rust",
+    "golang",
+    "cpp_questions",
+    "django",
+    "FastAPI",
+    "flask",
+    "MachineLearning",
+    "pytorch",
+    "datascience",
+    "sql",
+    "PowerShell",
+    "bash"
+  ],
+  "errors": []
+}

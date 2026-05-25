@@ -43,6 +43,9 @@ llama_cpp_bin/
 
 # cached vectors
 .unfetter/
+.cache/
+**/.cache/
+hf_remote_verify*/
 
 # checkpoints
 checkpoints/

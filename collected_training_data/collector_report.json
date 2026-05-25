@@ -1,0 +1,54 @@
+{
+  "github": [
+    {
+      "repo": "tiangolo/fastapi",
+      "license": "mit",
+      "kept": 120
+    },
+    {
+      "repo": "encode/starlette",
+      "license": "bsd-3-clause",
+      "kept": 104
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "license": "mit",
+      "kept": 120
+    },
+    {
+      "repo": "pallets/click",
+      "license": "bsd-3-clause",
+      "kept": 115
+    },
+    {
+      "repo": "pallets/werkzeug",
+      "license": "bsd-3-clause",
+      "kept": 120
+    },
+    {
+      "repo": "pytest-dev/pytest",
+      "license": "mit",
+      "kept": 120
+    },
+    {
+      "repo": "expressjs/express",
+      "license": "mit",
+      "kept": 120
+    },
+    {
+      "repo": "vuejs/core",
+      "license": "mit",
+      "kept": 120
+    },
+    {
+      "repo": "pmndrs/zustand",
+      "license": "mit",
+      "kept": 107
+    },
+    {
+      "repo": "encode/uvicorn",
+      "license": "bsd-3-clause",
+      "kept": 90
+    }
+  ]
+}

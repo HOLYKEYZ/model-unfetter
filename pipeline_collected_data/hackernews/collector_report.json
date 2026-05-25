@@ -1,0 +1,119 @@
+{
+  "kept": 403,
+  "queries": [
+    "Ask HN python",
+    "Ask HN javascript",
+    "Ask HN typescript",
+    "Ask HN react",
+    "Ask HN sql",
+    "Ask HN database",
+    "Ask HN debugging",
+    "Ask HN performance",
+    "Ask HN testing",
+    "Ask HN docker",
+    "Ask HN api",
+    "Ask HN best practices"
+  ],
+  "errors": [
+    {
+      "object_id": "14908913",
+      "error": "ChunkedEncodingError(ProtocolError(\"Connection broken: ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)\", ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)))"
+    },
+    {
+      "object_id": "41068153",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/41068153 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34BB10>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "12395507",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/12395507 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34B890>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "40123873",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/40123873 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34BC50>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "32065811",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/32065811 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484E10>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "5866858",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/5866858 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484CD0>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "37745001",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/37745001 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484B90>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "37506542",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/37506542 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484910>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "22408645",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/22408645 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB485450>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "4957827",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/4957827 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB485810>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "4643345",
+      "error": "ConnectionError(ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)))"
+    },
+    {
+      "object_id": "30430045",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/30430045 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34AE90>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "35682534",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/35682534 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34AFD0>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "10368067",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/10368067 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB485E50>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "33622175",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/33622175 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB486350>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "14579080",
+      "error": "ConnectionError(ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)))"
+    },
+    {
+      "object_id": "34948490",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/34948490 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34B390>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "39488618",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/39488618 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34BC50>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "42847629",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/42847629 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB34B9D0>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "26701132",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/26701132 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484550>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "33902321",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/33902321 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB484910>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "6818770",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/6818770 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB486710>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "44214154",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/44214154 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB486350>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "14041827",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/14041827 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB485A90>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    },
+    {
+      "object_id": "16377523",
+      "error": "ConnectionError(MaxRetryError('HTTPSConnectionPool(host=\\'hn.algolia.com\\', port=443): Max retries exceeded with url: /api/v1/items/16377523 (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x0000022BFB485450>: Failed to resolve \\'hn.algolia.com\\' ([Errno 11001] getaddrinfo failed)\"))'))"
+    }
+  ]
+}
