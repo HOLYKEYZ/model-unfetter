@@ -1,4 +1,4 @@
-# 🔓 Model Unfetter
+#  Model Unfetter
 
 **High-Precision LLM Unalignment via Aggressive Repulsion Orthogonalization**
 
@@ -7,9 +7,9 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![HuggingFace Dataset](https://img.shields.io/badge/🤗_HuggingFace-Dataset-yellow.svg)](https://huggingface.co/datasets/josephmayo/refusal-compliance-pairs)
 
-> ⚠️ **Disclaimer:** This tool is designed exclusively for AI safety research and red teaming. Use responsibly and in accordance with model licenses.
+>  **Disclaimer:** This tool is designed exclusively for AI safety research and red teaming. Use responsibly and in accordance with model licenses.
 
-## 🚀 Overview
+##  Overview
 
 Model Unfetter is a production-grade engine for removing refusal behaviors from Large Language Models. While inspired by tools like **failSpy's Abliterator** and **Heretic**, this framework introduces several mathematical refinements to achieve success on stubborn or extremely small models (0.5B - 3B, complex CoTs, GGUFs, and first framework to run on CPU) where standard methods fail.
 
@@ -56,7 +56,7 @@ Where `W` is the weight matrix (e.g., `o_proj`, `down_proj`) and `v̂` is the no
 
 ---
 
-## 💻 Usage
+##  Usage
 
 ### Installation
 
@@ -88,7 +88,7 @@ For lightning-fast inference on CPUs with no GPU:
 
 ---
 
-## 🤗 Trained Model
+##  proof Model
 
 A pre-built unfettered model is available on HuggingFace, ready for download and inference:
 
@@ -96,7 +96,7 @@ A pre-built unfettered model is available on HuggingFace, ready for download and
 
 ---
 
-## 🙏 Credits
+##  Credits
 
 - **failSpy**: For pioneering the [Abliterator](https://github.com/FailSpy/abliterator) research and difference-of-means methodology.
 - **heretic**: For the [Weight Orthogonalization](https://github.com/Heretic-Research/Heretic) original concept.
