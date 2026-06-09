@@ -114,7 +114,7 @@ def ablate(ctx, model_path, backend, output, strength, layers, targets,
         config = {
             "model_path": model_path,
             "backend": backend,
-            "output": output or f"./unfettered-{model_path.split('/')[-1]}",
+            "output": output or f"./unfettered-{model_path.rstrip('/').split('/')[-1]}",
             "strength": strength,
             "layers": layers,
             "targets": targets.split(","),
