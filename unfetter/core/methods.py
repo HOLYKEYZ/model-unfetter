@@ -20,7 +20,7 @@ from unfetter.core.vectors import (
     compute_refusal_vector_geometric_median,
     compute_all_layer_vectors,
 )
-from unfetter.core.recovery import attach_lora_recovery, train_lora_recovery
+from unfetter.utils.recovery import attach_lora_recovery, train_lora_recovery
 from unfetter.models.registry import auto_select_ablation_strategy
 
 logger = logging.getLogger(__name__)

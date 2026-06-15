@@ -46,7 +46,7 @@ from unfetter.core.vectors import (
     interpolate_layer_vectors,
 )
 from unfetter.core.methods import heretic_ablation, obliteratus_ablation
-from unfetter.core.recovery import attach_lora_recovery, train_lora_recovery
+from unfetter.utils.recovery import attach_lora_recovery, train_lora_recovery
 from unfetter.models.registry import auto_select_ablation_strategy, get_model_summary
 
 __all__ = [
