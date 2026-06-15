@@ -52,26 +52,6 @@ from abliteration_toolkit.configs import list_configs
 print(list_configs())  # ['fara_7b', 'qwopus_27b', 'zaya_8b', ...]
 ```
 
-## Building Kaggle Notebooks
-
-```python
-from abliteration_toolkit.builder import build_kaggle_notebook
-from abliteration_toolkit.configs import get_config
-
-config = get_config("fara_7b")
-build_kaggle_notebook(config, output_dir="./kaggle_output")
-# Creates: ./kaggle_output/fara-7b-abliteration-v2.ipynb
-#          ./kaggle_output/kernel-metadata.json
-```
-
-## Generate Kaggle Notebooks from CLI
-
-```bash
-python -m abliteration_toolkit.builder fara_7b ./output
-python -m abliteration_toolkit.builder qwopus_27b ./output
-python -m abliteration_toolkit.builder zaya_8b ./output
-```
-
 ## Architecture Differences by Model Family
 
 ### Dense Models (Llama, Qwen, Phi, Mistral)
