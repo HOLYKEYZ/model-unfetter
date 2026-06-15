@@ -60,11 +60,9 @@ def run_ablation(config: Dict) -> None:
 
     # Step 3: Detect model family and auto-select strategy
     logger.info("Step 3/7: Detecting model architecture and selecting ablation strategy...")
-    from unfetter.models.registry import auto_select_ablation_strategy, get_model_handler
-    import unfetter.models.generic 
-    
-    handler = get_model_handler(model, model_path)
-    summary = handler.get_summary()
+    from unfetter.models.registry import auto_select_ablation_strategy, get_model_summary
+
+    summary = get_model_summary(model, model_path)
     logger.info(f"Architecture: {summary['family']}, {summary['num_layers']} layers, "
                 f"hidden_size={summary['hidden_size']}")
 

@@ -1,11 +1,15 @@
 """
-Core directional ablation algorithm.
+Core directional ablation algorithms.
 
 Implements the technique from "Refusal in Language Models Is Mediated by a
-Single Direction" (Arditi et al. 2024).
+Single Direction" (Arditi et al. 2024), plus Heretic-style per-component
+parameters / float layer interpolation and Obliteratus-style norm-preserving
+projection variants.
 
-Formula: W' = W - α × (W·v̂)v̂ᵀ
-where v̂ is the normalized refusal vector and α is ablation strength.
+Formulas:
+    Standard:      W' = W - α * v ⊗ (vᵀ · W)
+    Norm-pres:     W' as above, then rescale to preserve row/column norms
+    SVD-pres:      orthogonal projection with optional per-row rescaling
 """
 
 import logging
@@ -16,6 +20,8 @@ import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 
+AblationMethod = str  # 'directional', 'svd_norm_preserving', 'channel_norm_preserving'
+
 
 def compute_projection(
     weight: torch.Tensor,
@@ -25,7 +31,7 @@ def compute_projection(
     Compute the projection to orthogonalize the output of a Linear layer.
 
     For PyTorch Linear layers y = x @ W^T, the rows of W compute the output features.
-    To make the output y orthogonal to vector v (y @ v = 0), we must project the 
+    To make the output y orthogonal to vector v (y @ v = 0), we must project the
     columns of W.
     Projection = v ⊗ (vᵀ · W)
 
@@ -43,14 +49,13 @@ def compute_projection(
     norm = direction.norm()
     if norm < 1e-10:
         return torch.zeros_like(weight)
-        
+
     direction = direction / norm
 
     # Move direction to same device/dtype as weight
     direction = direction.to(device=weight.device, dtype=weight.dtype)
 
     # (vᵀ · W) → shape (in_features,)
-    # Dot product of the refusal vector with each column of the weight matrix
     dots = direction @ weight
 
     # v ⊗ (vᵀ · W) → shape (out_features, in_features)
@@ -58,20 +63,26 @@ def compute_projection(
 
     return projection
 
+
 def ablate_weight(
     weight: torch.Tensor,
     refusal_vector: torch.Tensor,
     strength: float = 1.0,
+    method: AblationMethod = "directional",
 ) -> torch.Tensor:
     """
     Remove the refusal direction from a single weight matrix.
 
-    Formula: W' = W - α × (W·v̂)v̂ᵀ
-
     Args:
         weight: Weight matrix to modify, shape (out_features, in_features).
-        refusal_vector: Direction to remove, shape (in_features,).
+        refusal_vector: Direction to remove, shape (out_features,).
         strength: Ablation intensity (0.0 = no change, 1.0 = full removal).
+        method: Which ablation variant to use.
+            - "directional": standard orthogonal projection.
+            - "svd_norm_preserving": projection followed by per-row rescaling to
+              preserve output-channel norms.
+            - "channel_norm_preserving": projection followed by global Frobenius
+              norm rescaling.
 
     Returns:
         Modified weight tensor (new tensor, original is not modified).
@@ -85,7 +96,24 @@ def ablate_weight(
     projection = compute_projection(weight, refusal_vector)
     ablated = weight - strength * projection
 
-    return ablated
+    if method == "directional":
+        return ablated
+
+    if method == "svd_norm_preserving":
+        # Preserve the norm of each output channel (row).
+        original_norms = weight.norm(dim=1, keepdim=True)
+        ablated_norms = ablated.norm(dim=1, keepdim=True).clamp_min(1e-10)
+        scale = original_norms / ablated_norms
+        return ablated * scale
+
+    if method == "channel_norm_preserving":
+        # Preserve the overall Frobenius norm.
+        original_norm = weight.norm()
+        ablated_norm = ablated.norm().clamp_min(1e-10)
+        scale = original_norm / ablated_norm
+        return ablated * scale
+
+    raise ValueError(f"Unknown ablation method: {method}")
 
 
 def ablate_layer(
@@ -93,6 +121,8 @@ def ablate_layer(
     refusal_vector: torch.Tensor,
     strength: float = 1.0,
     target_modules: Optional[List[str]] = None,
+    component_alphas: Optional[Dict[str, float]] = None,
+    method: AblationMethod = "directional",
 ) -> Dict[str, Any]:
     """
     Apply directional ablation to target weight matrices in a single layer.
@@ -104,9 +134,13 @@ def ablate_layer(
     Args:
         layer: A single transformer layer (nn.Module).
         refusal_vector: Direction to remove, shape (hidden_size,).
-        strength: Ablation intensity (0.0-1.0).
+        strength: Base ablation intensity (0.0-2.0).
         target_modules: Which submodules to modify. Defaults to
                         ["self_attn.o_proj", "mlp.down_proj"].
+        component_alphas: Optional per-module alpha multipliers. Maps full module
+            names (e.g. "self_attn.o_proj") to floats. If a module is missing,
+            the base ``strength`` is used.
+        method: Ablation variant (see :func:`ablate_weight`).
 
     Returns:
         Dict with stats: {"modified_modules": [...], "projection_norms": {...}}
@@ -117,7 +151,7 @@ def ablate_layer(
             "mlp.down_proj"
         ]
 
-    stats = {"modified_modules": [], "projection_norms": {}}
+    stats = {"modified_modules": [], "projection_norms": {}, "method": method}
 
     for module_name in target_modules:
         # Navigate nested modules (e.g., "self_attn.o_proj")
@@ -142,7 +176,7 @@ def ablate_layer(
         # Get weight data (handle quantized weights)
         from unfetter.core.quantization import dequantize_weight
         weight = dequantize_weight(target.weight)
-        
+
         # Ensure weight is correctly shaped (dequantization can sometimes flatten)
         if hasattr(target, "weight") and weight.shape != target.weight.shape:
              weight = weight.reshape(target.weight.shape)
@@ -156,15 +190,24 @@ def ablate_layer(
             )
             continue
 
+        # Compute effective alpha for this component (Heretic-style per-component params)
+        effective_strength = strength
+        if component_alphas and module_name in component_alphas:
+            effective_strength *= component_alphas[module_name]
+            logger.debug(f"Module {module_name}: component_alpha={component_alphas[module_name]}")
+
+        if effective_strength <= 0:
+            logger.debug(f"Module {module_name}: effective strength=0, skipping")
+            continue
+
         # Compute ablated weight
         original_norm = weight.norm().item()
-        ablated_weight = ablate_weight(weight, refusal_vector, strength)
+        ablated_weight = ablate_weight(weight, refusal_vector, effective_strength, method=method)
         projection_norm = (weight - ablated_weight).norm().item()
 
         # Apply update
         if hasattr(target.weight, "quant_state"):
             # If it was quantized, we replace it with a float parameter
-            # logic to maintain the architecture but with float weights
             target.weight = nn.Parameter(ablated_weight.to(dtype=weight.dtype))
         else:
             target.weight.data = ablated_weight.to(dtype=target.weight.dtype)
@@ -174,6 +217,7 @@ def ablate_layer(
             "original_weight_norm": original_norm,
             "projection_norm": projection_norm,
             "relative_change": projection_norm / max(original_norm, 1e-10),
+            "effective_strength": effective_strength,
         }
 
         logger.debug(
@@ -241,6 +285,47 @@ def compute_ablation_weights(
     return weights
 
 
+def _get_model_layers(model: nn.Module) -> nn.ModuleList:
+    """
+    Extract the transformer layer list from a HuggingFace model.
+
+    Supports common architectures: Llama, Mistral, Gemma, GPT-NeoX, Phi, Qwen.
+
+    Args:
+        model: A HuggingFace transformer model.
+
+    Returns:
+        ModuleList of transformer layers.
+    """
+    # Common layer access patterns for different architectures
+    layer_paths = [
+        "model.layers",          # Llama, Mistral, Gemma, Qwen
+        "transformer.h",         # GPT-2, GPT-Neo
+        "transformer.layers",    # Some custom models
+        "gpt_neox.layers",       # GPT-NeoX, Pythia
+        "model.decoder.layers",  # OPT, BART decoder
+        "transformer.blocks",    # some custom/older models
+    ]
+
+    for path in layer_paths:
+        parts = path.split(".")
+        obj = model
+        found = True
+        for part in parts:
+            if hasattr(obj, part):
+                obj = getattr(obj, part)
+            else:
+                found = False
+                break
+        if found and isinstance(obj, nn.ModuleList):
+            return obj
+
+    raise ValueError(
+        "Could not find transformer layers. Supported patterns: "
+        + ", ".join(layer_paths)
+    )
+
+
 def directional_ablation(
     model: nn.Module,
     refusal_vector: torch.Tensor,
@@ -248,6 +333,8 @@ def directional_ablation(
     strength: float = 1.0,
     target_modules: Optional[List[str]] = None,
     layer_weights: Optional[Dict[int, float]] = None,
+    component_alphas: Optional[Dict[str, float]] = None,
+    method: AblationMethod = "directional",
     progress_callback=None,
 ) -> Dict[str, Any]:
     """
@@ -260,11 +347,12 @@ def directional_ablation(
         model: Transformer model (HuggingFace-compatible).
         refusal_vector: Refusal direction to remove, shape (hidden_size,).
         layer_indices: Which transformer layers to modify.
-        strength: Global ablation intensity (0.0-1.0).
+        strength: Global ablation intensity (0.0-2.0).
         target_modules: Which submodules per layer to modify.
-                        Defaults to ["self_attn.o_proj", "mlp.down_proj"].
         layer_weights: Optional per-layer weights (from compute_ablation_weights).
                        Multiplied with strength for final per-layer intensity.
+        component_alphas: Optional per-module alpha multipliers.
+        method: Ablation variant (directional / svd_norm_preserving / channel_norm_preserving).
         progress_callback: Optional callable(layer_idx, total) for progress.
 
     Returns:
@@ -299,7 +387,7 @@ def directional_ablation(
     logger.info(
         f"Starting directional ablation: "
         f"{len(valid_indices)} layers, strength={strength}, "
-        f"targets={target_modules}"
+        f"targets={target_modules}, method={method}"
     )
 
     results = {
@@ -307,6 +395,7 @@ def directional_ablation(
         "ablated_layers": len(valid_indices),
         "strength": strength,
         "target_modules": target_modules,
+        "method": method,
         "layer_stats": {},
     }
 
@@ -327,6 +416,8 @@ def directional_ablation(
             refusal_vector,
             strength=effective_strength,
             target_modules=target_modules,
+            component_alphas=component_alphas,
+            method=method,
         )
         results["layer_stats"][layer_idx] = stats
 
@@ -349,41 +440,54 @@ def directional_ablation(
     return results
 
 
-def _get_model_layers(model: nn.Module) -> nn.ModuleList:
+def ablate_with_float_index(
+    model: nn.Module,
+    layer_vectors: List[torch.Tensor],
+    direction_index: float,
+    layer_indices: List[int],
+    strength: float = 1.0,
+    target_modules: Optional[List[str]] = None,
+    component_alphas: Optional[Dict[str, float]] = None,
+    method: AblationMethod = "directional",
+    layer_weights: Optional[Dict[int, float]] = None,
+    progress_callback=None,
+) -> Dict[str, Any]:
     """
-    Extract the transformer layer list from a HuggingFace model.
+    Heretic-style ablation using a continuous layer index.
 
-    Supports common architectures: Llama, Mistral, Gemma, GPT-NeoX, Phi, Qwen.
+    Instead of a single refusal vector, a stack of per-layer vectors is supplied
+    and ``direction_index`` (float in [0, 1]) selects an interpolated vector.
+    This lets hyperparameter search find the single best refusal direction for
+    the model without restricting it to a discrete layer.
 
     Args:
-        model: A HuggingFace transformer model.
+        model: Transformer model.
+        layer_vectors: Per-layer refusal vectors (one per layer).
+        direction_index: Float in [0, 1] selecting the interpolated vector.
+        layer_indices: Which layers to modify.
+        strength: Global ablation intensity.
+        target_modules: Submodules per layer to modify.
+        component_alphas: Per-module alpha multipliers.
+        method: Ablation variant.
+        layer_weights: Optional per-layer kernel weights.
+        progress_callback: Optional progress callback.
 
     Returns:
-        ModuleList of transformer layers.
+        Ablation stats dict including ``direction_index``.
     """
-    # Common layer access patterns for different architectures
-    layer_paths = [
-        "model.layers",          # Llama, Mistral, Gemma, Qwen
-        "transformer.h",         # GPT-2, GPT-Neo
-        "transformer.layers",    # Some custom models
-        "gpt_neox.layers",       # GPT-NeoX, Pythia
-        "model.decoder.layers",  # OPT, BART decoder
-    ]
+    from unfetter.core.vectors import interpolate_layer_vectors
 
-    for path in layer_paths:
-        parts = path.split(".")
-        obj = model
-        found = True
-        for part in parts:
-            if hasattr(obj, part):
-                obj = getattr(obj, part)
-            else:
-                found = False
-                break
-        if found and isinstance(obj, nn.ModuleList):
-            return obj
-
-    raise ValueError(
-        "Could not find transformer layers. Supported patterns: "
-        + ", ".join(layer_paths)
+    refusal_vector = interpolate_layer_vectors(layer_vectors, direction_index)
+    results = directional_ablation(
+        model,
+        refusal_vector,
+        layer_indices,
+        strength=strength,
+        target_modules=target_modules,
+        component_alphas=component_alphas,
+        method=method,
+        layer_weights=layer_weights,
+        progress_callback=progress_callback,
     )
+    results["direction_index"] = direction_index
+    return results

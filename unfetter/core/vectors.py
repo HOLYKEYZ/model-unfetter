@@ -237,6 +237,134 @@ def compute_all_layer_vectors(
     return vectors
 
 
+def geometric_median(
+    points: List[torch.Tensor],
+    eps: float = 1e-5,
+    max_iter: int = 100,
+) -> torch.Tensor:
+    """
+    Compute the geometric median of a set of vectors.
+
+    The geometric median is more robust to outliers than the arithmetic mean,
+    making it well-suited for aggregating refusal directions from a diverse
+    prompt set (as used by Heretic).
+
+    Args:
+        points: List of 1-D tensors of the same shape.
+        eps: Convergence tolerance.
+        max_iter: Maximum Weiszfeld iterations.
+
+    Returns:
+        1-D tensor containing the geometric median.
+    """
+    if not points:
+        raise ValueError("Cannot compute geometric median of empty point set")
+
+    stacked = torch.stack([p.flatten() for p in points])
+    median = stacked.mean(dim=0)
+
+    for _ in range(max_iter):
+        distances = torch.norm(stacked - median, dim=1)
+        # Avoid division by zero
+        distances = torch.clamp(distances, min=1e-10)
+        weights = 1.0 / distances
+        weights = weights / weights.sum()
+        new_median = (stacked * weights.unsqueeze(1)).sum(dim=0)
+
+        if torch.norm(new_median - median) < eps:
+            return new_median
+
+        median = new_median
+
+    return median
+
+
+def compute_refusal_vector_geometric_median(
+    model: nn.Module,
+    tokenizer,
+    refusal_prompts: List[str],
+    compliance_prompts: List[str],
+    target_layer: int = -2,
+    batch_size: int = 8,
+    max_samples: Optional[int] = None,
+    device: Optional[str] = None,
+) -> torch.Tensor:
+    """
+    Compute a robust refusal direction using geometric-median contrast.
+
+    Returns the normalized vector from compliance median to refusal median,
+    where each median is the geometric median of the respective activations.
+    """
+    if max_samples:
+        refusal_prompts = refusal_prompts[:max_samples]
+        compliance_prompts = compliance_prompts[:max_samples]
+
+    refusal_activations = _extract_activations_batched(
+        model, tokenizer, refusal_prompts, target_layer, batch_size, device,
+        label="refusal",
+    )
+    compliance_activations = _extract_activations_batched(
+        model, tokenizer, compliance_prompts, target_layer, batch_size, device,
+        label="compliance",
+    )
+
+    refusal_median = geometric_median(refusal_activations)
+    compliance_median = geometric_median(compliance_activations)
+
+    refusal_vector = refusal_median - compliance_median
+    norm = refusal_vector.norm()
+    if norm < 1e-10:
+        logger.warning("Geometric-median refusal vector has near-zero norm")
+        return refusal_vector
+
+    refusal_vector = refusal_vector / norm
+    logger.info(
+        f"Geometric-median refusal vector computed: norm={norm:.6f}, "
+        f"shape={refusal_vector.shape}"
+    )
+    return refusal_vector
+
+
+def interpolate_layer_vectors(
+    layer_vectors: List[torch.Tensor],
+    direction_index: float,
+) -> torch.Tensor:
+    """
+    Interpolate a refusal vector from a continuous layer index.
+
+    Heretic uses a float ``direction_index`` in [0, 1] to choose the
+    position along the layer stack, then blends the two nearest layer
+    vectors for a smooth, per-model optimum.
+
+    Args:
+        layer_vectors: List of normalized refusal vectors, one per layer.
+        direction_index: Float in [0, 1]; 0 = first layer, 1 = last layer.
+
+    Returns:
+        Normalized interpolated refusal vector.
+    """
+    if not layer_vectors:
+        raise ValueError("layer_vectors must not be empty")
+
+    n = len(layer_vectors)
+    if n == 1 or direction_index <= 0:
+        return layer_vectors[0]
+    if direction_index >= 1:
+        return layer_vectors[-1]
+
+    scaled = direction_index * (n - 1)
+    lower_idx = int(scaled)
+    upper_idx = min(lower_idx + 1, n - 1)
+    t = scaled - lower_idx
+
+    interpolated = (1 - t) * layer_vectors[lower_idx] + t * layer_vectors[upper_idx]
+    norm = interpolated.norm()
+    if norm < 1e-10:
+        logger.warning("Interpolated refusal vector has near-zero norm")
+        return interpolated
+    return interpolated / norm
+
+
 def _extract_activations_batched(
     model: nn.Module,
     tokenizer,
