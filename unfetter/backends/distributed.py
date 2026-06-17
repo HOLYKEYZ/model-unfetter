@@ -115,9 +115,10 @@ class DistributedBackend(Backend):
 
             # Determine which device this layer is on
             layer_device = next(layer.parameters()).device
+            layer_dtype = next(layer.parameters()).dtype
 
-            # Move refusal vector to the layer's device
-            rv = refusal_vector.to(layer_device)
+            # Move refusal vector to the layer's device and match dtype
+            rv = refusal_vector.to(device=layer_device, dtype=layer_dtype)
 
             stats = ablate_layer(
                 layer, rv,
@@ -128,6 +129,10 @@ class DistributedBackend(Backend):
 
             if progress_callback:
                 progress_callback(i + 1, total)
+
+            # Memory cleanup to prevent fragmentation across GPUs
+            gc.collect()
+            torch.cuda.empty_cache()
 
         results["total_time"] = round(time.time() - start_time, 2)
         results["layers_processed"] = total
