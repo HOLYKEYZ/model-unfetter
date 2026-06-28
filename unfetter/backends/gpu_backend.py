@@ -108,7 +108,7 @@ class GPUBackend(Backend):
             target_modules = ["self_attn.o_proj", "mlp.down_proj"]
 
         # Move refusal vector to GPU
-        refusal_vector = refusal_vector.to(self.device)
+        refusal_vector = refusal_vector.to(device=self.device, dtype=self.dtype)
 
         layers = _get_model_layers(model)
         total = len(layer_indices)
